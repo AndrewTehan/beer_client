@@ -4,6 +4,28 @@ require 'logger'
 require 'ostruct'
 
 module Beer
+  class InfoLogger
+    def initialize(logger)
+      @logger = logger
+    end
+
+    def debug(*args, &block)
+      @logger.info(*args, &block)
+    end
+
+    def info(*args, &block)
+      @logger.info(*args, &block)
+    end
+
+    def warn(*args, &block)
+      @logger.warn(*args, &block)
+    end
+
+    def error(*args, &block)
+      @logger.error(*args, &block)
+    end
+  end
+
   class Client
     BASIC_AUTH_LOGIN = 'admin'.freeze
     DEFAULT_API_VERSION = '1'.freeze
@@ -71,7 +93,8 @@ module Beer
     attr_reader :response
 
     def logger
-      (@logger || Logger.new(STDOUT)).tap { |l| l.level = Logger::INFO }
+      return nil unless @logger
+      InfoLogger.new(@logger)
     end
 
     def request
@@ -97,7 +120,7 @@ module Beer
         c.options[:proxy] = proxy if proxy
         c.request :json
 
-        c.response :logger, logger, { headers: true, bodies: true } do |l|
+        c.response :logger, logger, { headers: true, bodies: true, log_level: :info } do |l|
           l.filter(/(Authorization:) .+/, '\1 [FILTERED]')
         end
 
